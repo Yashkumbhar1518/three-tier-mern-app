@@ -17,11 +17,10 @@ pipeline {
 
         stage('Deploy Containers') {
             steps {
-                echo "🛑 Stopping old containers..."
-                sh 'docker-compose down -v || true'
-                
-                echo "🎯 Starting containers..."
-                sh 'docker-compose up -d'
+               dir("${WORKSPACE}") {
+                    sh 'docker-compose down || true'
+                    sh 'docker-compose up -d --build'
+}
             }
         }
 
