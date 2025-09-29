@@ -1,36 +1,40 @@
 pipeline {
     agent any
 
+    environment {
+        COMPOSE_FILE = 'docker-compose.yaml'
+    }
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/Yashkumbhar1518/three-tier-mern-app.git'
+                git branch: 'main',
+                    url: 'https://github.com/Yashkumbhar1518/three-tier-mern-app.git'
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build & Deploy with Docker Compose') {
             steps {
-                echo "🚀 Building backend and frontend containers..."
-                sh 'docker-compose build'
-            }
-        }
+                // Ensure we are in the repo root
+                dir("${WORKSPACE}") {
+                    echo "🛠️ Stopping old containers if any..."
+                    sh 'docker-compose down -v || true'
 
-        stage('Deploy Containers') {
-            steps {
-               dir("${WORKSPACE}") {
-                    sh 'docker-compose down || true'
+                    echo "🚀 Building and starting containers..."
                     sh 'docker-compose up -d --build'
-}
+                }
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                echo "🔍 Checking backend health..."
-                sh 'curl -f http://localhost:5050/record || echo "Backend not ready yet"'
-                
-                echo "✅ Deployment complete!"
-                echo "Open http://<EC2-PUBLIC-IP>:5173 for frontend"
+                echo "🔍 Checking backend status..."
+                dir("${WORKSPACE}") {
+                    sh 'docker ps'
+                }
+                echo "✅ Deployment should be live:"
+                echo "Frontend: http://<EC2-PUBLIC-IP>:5173"
+                echo "Backend: http://<EC2-PUBLIC-IP>:5050"
             }
         }
     }
@@ -40,7 +44,7 @@ pipeline {
             echo "🎉 MERN app deployed successfully on EC2!"
         }
         failure {
-            echo "❌ Deployment failed. Check Jenkins logs."
+            echo "❌ Deployment failed. Check Jenkins console logs."
         }
     }
 }
