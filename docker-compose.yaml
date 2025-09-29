@@ -8,7 +8,7 @@ services:
     networks:
       - mern_network
     env_file:
-      - ./mern/backend/.env
+      - ./backend/.env
     depends_on:
       - mongodb
 
@@ -19,7 +19,7 @@ services:
     networks:
       - mern_network
     env_file:
-      - ./mern/frontend/.env
+      - ./frontend/.env
 
   mongodb:
     image: mongo:latest
